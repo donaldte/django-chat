@@ -41,6 +41,8 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     
     # application externe
+    'avatar',
+    'channels',
     
     
     # application interne
@@ -78,6 +80,7 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'django_chat.wsgi.application'
 
+ASGI_APPLICATION = 'django_chat.asgi.application'
 
 # Database
 

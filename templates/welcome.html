@@ -1,0 +1,27 @@
+<div id="welcome-msg">
+  <h1>Welcome to Django Chat</h1>
+</div>
+
+<script>
+  var colors = ["#9b4dca", "#6a1b9a", "#6a1b9a", "#4a148c", "#311b92", "#1a237e", "#0d47a1", "#01579b", "#006064", "#00838f", "#2e7d32", "#558b2f", "#827717", "#f57f17", "#e65100"];
+  var i = 0;
+  function changeColor() {
+    document.getElementById("welcome-msg").style.background = "linear-gradient(to right, " + colors[i] + ", " + colors[i+1] + ")";
+    document.getElementById("welcome-msg").style.color = "#fff";
+    i = (i + 1) % colors.length;
+  }
+  setInterval(changeColor, 1000);
+</script>
+
+<style>
+  #welcome-msg {
+    padding: 25px;
+    text-align: center;
+    animation: blink 1s infinite;
+  }
+  @keyframes blink {
+    50% {
+      opacity: 0.5;
+    }
+  }
+</style>

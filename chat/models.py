@@ -7,19 +7,18 @@ from account.models import Profile
 from django.utils import timezone
 
 
-
 class Message(models.Model):
     """
     Name: Message model
-    Description: This models holds the message, sender, reciever and the timestamps
+    Description: This models holds the message, sender, receiver and the timestamps
     author: donaldtedom0@gmail.com
     """
     sender = models.ForeignKey(Profile, on_delete=models.CASCADE, related_name='sent_messages')
     receiver = models.ForeignKey(Profile, on_delete=models.CASCADE, related_name='received_messages')
     content = models.TextField()
     timestamp = models.DateTimeField(default=timezone.now)
-    is_read = models.BooleanField(default=False)    
-    
+    is_read = models.BooleanField(default=False)
+
     def sent_time(self):
         now = timezone.now()
         diff = now - self.timestamp
@@ -38,7 +37,7 @@ class Message(models.Model):
             return f'{diff.days} days ago'
         else:
             return self.timestamp.strftime('%B %d, %Y')
-        
+
     async def mark_as_read(self):
         if not self.is_read:
             self.is_read = True
@@ -70,5 +69,3 @@ class Message(models.Model):
 
     def __str__(self):
         return f'{self.sender.user.username} to {self.receiver.user.username}: {self.content[:50]}...'
-
-

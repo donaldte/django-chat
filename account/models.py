@@ -36,13 +36,13 @@ class Profile(models.Model):
                 self.avatar = Avatar.objects.create(user=self.user, primary=True, avatar_type='identicon')    
         super(Profile, self).save(*args, **kwargs)
         
-    @database_sync_to_async
-    async def get_unread_messages_count(self, sender):
-        from chat.models import Message
-        """
-        Returns the number of unread messages from the given sender.
-        """
-        return Message.objects.filter(sender=sender, recipient=self.user, is_read=False).count()    
+    # @database_sync_to_async
+    # async def get_unread_messages_count(self, sender):
+    #     from chat.models import Message
+    #     """
+    #     Returns the number of unread messages from the given sender.
+    #     """
+    #     return Message.objects.filter(sender=sender, recipient=self.user, is_read=False).count()
     
     def last_seen(self):
         if self.last_online is None:

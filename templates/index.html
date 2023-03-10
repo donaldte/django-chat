@@ -1,7 +1,9 @@
 {% extends 'base.html' %}
 
 {% block content %}
-
+{% include 'welcome.html' %}
+{% if user.is_authenticated %}
+  <a href="" class="btn btn-primary">Logout</a>
 <div class="row clearfix">
   <div class="col-lg-12">
       <div class="card chat-app">
@@ -17,7 +19,7 @@
                       <img src="https://bootdey.com/img/Content/avatar/avatar1.png" alt="avatar">
                       <div class="about">
                           <div class="name">Vincent Porter</div>
-                          <div class="status"> <i class="fa fa-circle offline"></i> left 7 mins ago </div>                                            
+                          <div class="status"> <i class="fa fa-circle offline"></i> left 7 mins ago </div>
                       </div>
                   </li>
                   <li class="clearfix active">
@@ -33,7 +35,7 @@
                           <div class="name">Mike Thomas</div>
                           <div class="status"> <i class="fa fa-circle online"></i> online </div>
                       </div>
-                  </li>                                    
+                  </li>
                   <li class="clearfix">
                       <img src="https://bootdey.com/img/Content/avatar/avatar7.png" alt="avatar">
                       <div class="about">
@@ -90,8 +92,8 @@
                           <div class="message-data">
                               <span class="message-data-time">10:12 AM, Today</span>
                           </div>
-                          <div class="message my-message">Are we meeting today?</div>                                    
-                      </li>                               
+                          <div class="message my-message">Are we meeting today?</div>
+                      </li>
                       <li class="clearfix">
                           <div class="message-data">
                               <span class="message-data-time">10:15 AM, Today</span>
@@ -105,12 +107,54 @@
                       <div class="input-group-prepend">
                           <span class="input-group-text"><i class="fa fa-send"></i></span>
                       </div>
-                      <input type="text" class="form-control" placeholder="Enter text here...">                                    
+                      <input type="text" class="form-control" placeholder="Enter text here...">
                   </div>
               </div>
           </div>
       </div>
+
   </div>
 </div>
+{% else %}
+  <div class="row">
+    <div class="col-md-6">
+        <h2 class="text-center mb-4">Login</h2>
+      <form method="post">
+        {% csrf_token %}
+        <div class="form-group">
+          <label for="username"><i class="fa fa-user"></i> Username:</label>
+          <input type="text" name="username" id="username" class="form-control">
+        </div>
+        <div class="form-group">
+          <label for="password"><i class="fa fa-lock"></i> Password:</label>
+          <input type="password" name="password" id="password" class="form-control">
+        </div>
+        <button type="submit" class="btn btn-primary">Login</button>
+      </form>
+    </div>
+    <div class="col-md-6">
+        <h2 class="text-center mb-4">Register</h2>
+      <form method="post">
+        {% csrf_token %}
+        <div class="form-group">
+          <label for="username"><i class="fa fa-user"></i> Username:</label>
+          <input type="text" name="username" id="username" class="form-control">
+        </div>
+        <div class="form-group">
+          <label for="password"><i class="fa fa-lock"></i> Password:</label>
+          <input type="password" name="password" id="password" class="form-control">
+        </div>
+        <div class="form-group">
+          <label for="confirm_password"><i class="fa fa-lock"></i> Confirm Password:</label>
+          <input type="password" name="confirm_password" id="confirm_password" class="form-control">
+        </div>
+        <button type="submit" class="btn btn-primary">Register</button>
+      </form>
+    </div>
+  </div>
+{% endif %}
+
+
+
 
 {% endblock content %}

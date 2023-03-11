@@ -1,11 +1,15 @@
+"""
+LIST OF CONSUMERS
+AUTHOR: DONALD PROGRAMMEUR
+"""
 import json
+from datetime import timezone, timedelta
 
 from channels.db import database_sync_to_async
 from channels.generic.websocket import AsyncWebsocketConsumer
 from django.contrib.auth import get_user_model
 from .models import Profile, Message
-from django.db.models.signals import post_save
-from django.dispatch import receiver
+
 
 User = get_user_model()
 
@@ -88,49 +92,84 @@ class PrivateChatConsumer(AsyncWebsocketConsumer):
         message.save()
 
 
-@receiver(post_save, sender=User)
-def create_user_profile(sender, instance, created, **kwargs):
-    if created:
-        Profile.objects.create(user=instance)
-
-
-# Define a WebSocket consumer for user status updates
-class UserStatusConsumer(AsyncWebsocketConsumer):
-
-    # Method called when a WebSocket connection is established
+class UserListStatusConsumer(AsyncWebsocketConsumer):
     async def connect(self):
-        # Add the current channel to a group named "user_status"
-        await self.channel_layer.group_add("user_status", self.channel_name)
-        # Accept the WebSocket connection
+        await self.channel_layer.group_add('user_list', self.channel_name)
         await self.accept()
 
-    async def user_create(self, event):
-        user = event['user']
-        user_list = []
-        users = Profile.objects.all().order_by('-last_online')
-        for user in users:
-            user_list.append({'id': user.id, 'username': user.user.username, 'online': user.is_online})
-        await self.send(text_data=json.dumps({'type': 'user_status_update', 'users': user_list}))
-
-    # Method called when a WebSocket connection is closed
     async def disconnect(self, close_code):
-        await self.channel_layer.group_discard("user_status", self.channel_name)
-        # update user status in the database
-        user = self.scope['user']
-        if user.is_authenticated:
-            profile = await database_sync_to_async(Profile.objects.get)(user=user)
-            profile.is_online = False
-            profile.save()
-            await self.channel_layer.group_send("user_status", {'type': 'user_status_update'})
+        await self.channel_layer.group_discard('user_list', self.channel_name)
 
-    # Method called when a user's online status is updated
-    async def user_status_update(self, event):
-        # Retrieve all user profiles and sort them by last online time
-        users = Profile.objects.all().order_by('-last_online')
-        # Initialize an empty list to store user information
+    async def receive(self, text_data):
+        # Receive message from WebSocket
+        text_data_json = json.loads(text_data)
+        message = text_data_json['message']
+
+        # Add new user to the list when they create an account
+        if message == 'user_created':
+            new_user = text_data_json['user']
+            user_data = await self.get_user_data(new_user)
+            user_data['status'] = 'online'
+            await self.channel_layer.group_send(
+                "user_list",
+                {
+                    "type": "user_list_update",
+                    "users": [user_data],
+                }
+            )
+        else:
+            # Update user status and send updated user list
+            user = self.scope["user"]
+            if user.is_authenticated:
+                await database_sync_to_async(self.update_user_status)(user.id, True)
+            await self.send_user_list()
+
+    async def user_online(self, event):
+        user_id = event['user_id']
+        await self.update_user_status(user_id, True)
+        user_list = await self.get_sorted_user_list()
+        await self.send_user_list(user_list)
+
+    async def user_offline(self, event):
+        user_id = event['user_id']
+        await self.update_user_status(user_id, False)
+        user_list = await self.get_sorted_user_list()
+        await self.send_user_list(user_list)
+
+    async def user_created(self, event):
+        user_list = await self.get_sorted_user_list()
+        await self.send_user_list(user_list)
+
+    @database_sync_to_async
+    def update_user_status(self, user_id, status):
+        user = Profile.objects.get(pk=user_id)
+        user.last_online = timezone.now() if status else None
+        user.save()
+
+    @database_sync_to_async
+    def get_sorted_user_list(self):
+        profiles = Profile.objects.all()
+        sorted_profiles = sorted(profiles, key=lambda p: p.last_online, reverse=True)
         user_list = []
-        # Loop through each user profile and add their information to the user list
-        for user in users:
-            user_list.append({'id': user.id, 'username': user.user.username, 'online': user.is_online})
-        # Send a WebSocket message to the client containing the updated user list
-        await self.send(text_data=json.dumps({'type': 'user_status_update', 'users': user_list}))
+        for profile in sorted_profiles:
+            user_dict = {
+                'id': profile.id,
+                'username': profile.user.username,
+                'is_online': profile.last_online and (timezone.now() - profile.last_online) < timedelta(minutes=5),
+                'last_seen': profile.last_seen.strftime('%b %d %Y %I:%M %p') if profile.last_seen else '',
+            }
+            user_list.append(user_dict)
+        return user_list
+
+    @database_sync_to_async
+    def get_user_data(self, user_id):
+        user = get_user_model().objects.get(id=user_id)
+        return {
+            'id': user.id,
+            'username': user.username,
+            'status': user.last_seen,
+            'last_login': str(user.last_login) if user.last_login else None
+        }
+
+    async def send_user_list(self, user_list):
+        await self.send(text_data=json.dumps({'user_list': user_list}))

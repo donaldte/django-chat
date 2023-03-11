@@ -39,16 +39,16 @@ def send_message(request):
         return JsonResponse({'status': 'ok'})
 
 
-class HomeView(LoginRequiredMixin, View):
+class HomeView(View):
     """ Page principale """
 
     template_name = 'index.html'
 
-    def get(self, request, username=None, *args, **kwargs):
-        # the list of users who are registered on the site.
-        users = Profile.objects.exclude(user=request.user)
-        # the chat room for the two users.
-        receiver = get_object_or_404(Profile, user__username=username)
-        messages = Message.objects.filter(sender=request.user.profile, receiver=receiver)
-        context = {'receiver': receiver, 'messages': messages, 'users': users}
-        return render(request, self.template_name, context)
+    def get(self, request,  *args, **kwargs):
+        # # the list of users who are registered on the site.
+        # users = Profile.objects.exclude(user=request.user)
+        # # the chat room for the two users.
+        # receiver = get_object_or_404(Profile, user__username=username)
+        # messages = Message.objects.filter(sender=request.user.profile, receiver=receiver)
+        # context = {'receiver': receiver, 'messages': messages, 'users': users}
+        return render(request, self.template_name)

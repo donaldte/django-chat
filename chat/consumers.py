@@ -155,6 +155,7 @@ class UserListStatusConsumer(AsyncWebsocketConsumer):
             user_dict = {
                 'id': profile.id,
                 'username': profile.user.username,
+                'avatar': profile.avatar,
                 'is_online': profile.last_online and (timezone.now() - profile.last_online) < timedelta(minutes=5),
                 'last_seen': profile.last_seen.strftime('%b %d %Y %I:%M %p') if profile.last_seen else '',
             }

@@ -168,6 +168,7 @@ class UserListStatusConsumer(AsyncWebsocketConsumer):
         return {
             'id': user.id,
             'username': user.username,
+            'avatar': user.profile.avatar,
             'status': user.last_seen,
             'last_login': str(user.last_login) if user.last_login else None
         }
